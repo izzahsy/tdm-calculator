@@ -1,1 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDM Calculator</title>
+<style>
+  :root{
+    --bg:#F6F7F6;
+    --surface:#FFFFFF;
+    --ink:#1E2A29;
+    --ink-muted:#5B6B69;
+    --line:#DDE3E1;
+    --teal:#2B5D5B;
+    --teal-dark:#1D4341;
+    --fill:#FBF3D6;
+    --fill-border:#E4CE7F;
+    --mono-bg:#F1F3F1;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  header{
+    background:var(--teal);
+    color:#fff;
+    padding:22px 20px 20px;
+  }
+  header .wrap{
+    max-width:880px;
+    margin:0 auto;
+  }
+  header h1{
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:600;
+    font-size:1.5rem;
+    margin:0 0 2px;
+    letter-spacing:0.2px;
+  }
+  header p{
+    margin:0;
+    font-size:0.88rem;
+    color:#D7E6E4;
+  }
+  .container{
+    max-width:880px;
+    margin:0 auto;
+    padding:22px 20px 60px;
+  }
+  .selector{
+    margin:18px 0 26px;
+  }
+  .selector label{
+    display:block;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-muted);
+    margin-bottom:6px;
+  }
+  select#toolSelect{
+    width:100%;
+    padding:11px 14px;
+    font-size:1rem;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--surface) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="9" viewBox="0 0 14 9"><path d="M1 1l6 6 6-6" stroke="%235B6B69" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 14px center;
+    appearance:none;
+    -webkit-appearance:none;
+    color:var(--ink);
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px 22px 24px;
+    margin-bottom:20px;
+  }
+  .card h2{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:1.15rem;
+    margin:0 0 4px;
+    color:var(--teal-dark);
+  }
+  .card .sub{
+    font-size:0.85rem;
+    color:var(--ink-muted);
+    margin:0 0 18px;
+  }
+  .field{
+    margin-bottom:14px;
+  }
+  .field label{
+    display:block;
+    font-size:0.85rem;
+    color:var(--ink);
+    margin-bottom:5px;
+  }
+  .field .row{
+    display:flex;
+    gap:10px;
+  }
+  input[type="number"]{
+    width:100%;
+    padding:9px 11px;
+    font-size:0.98rem;
+    border:1px solid var(--fill-border);
+    background:var(--fill);
+    border-radius:6px;
+    color:var(--ink);
+  }
+  input[type="number"]:focus{
+    outline:2px solid var(--teal);
+    outline-offset:1px;
+  }
+  .segmented{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+    width:fit-content;
+  }
+  .segmented button{
+    padding:8px 18px;
+    border:none;
+    background:var(--surface);
+    color:var(--ink-muted);
+    font-size:0.9rem;
+    cursor:pointer;
+  }
+  .segmented button.active{
+    background:var(--teal);
+    color:#fff;
+  }
+  .result{
+    margin-top:16px;
+    padding:14px 16px;
+    background:var(--mono-bg);
+    border-left:3px solid var(--teal);
+    border-radius:0 6px 6px 0;
+  }
+  .result .value{
+    font-family:"Courier New",monospace;
+    font-size:1.3rem;
+    color:var(--teal-dark);
+    font-weight:700;
+  }
+  .result .formula{
+    font-family:"Courier New",monospace;
+    font-size:0.82rem;
+    color:var(--ink-muted);
+    margin-top:6px;
+  }
+  .note{
+    font-size:0.8rem;
+    color:var(--ink-muted);
+    margin-top:10px;
+  }
+  .divider{
+    border:none;
+    border-top:1px solid var(--line);
+    margin:22px 0;
+  }
+  footer{
+    text-align:center;
+    font-size:0.78rem;
+    color:var(--ink-muted);
+    padding:10px 20px 40px;
+  }
+  .badge{
+    display:inline-block;
+    font-size:0.72rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--teal-dark);
+    background:#E3EFEE;
+    padding:2px 8px;
+    border-radius:4px;
+    margin-bottom:8px;
+  }
+</style>
+</head>
+<body>
 
+<header>
+  <div class="wrap">
+    <h1>TDM Calculator</h1>
+    <p>Therapeutic Drug Monitoring — worksheet reference tool</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="selector">
+    <label for="toolSelect">Select calculator</label>
+    <select id="toolSelect">
+      <option value="weight">Weight — Ideal &amp; Adjusted Body Weight</option>
+      <option value="soon1" disabled>Aminoglycosides (coming soon)</option>
+      <option value="soon2" disabled>Vancomycin (coming soon)</option>
+      <option value="soon3" disabled>Other drugs (coming soon)</option>
+    </select>
+  </div>
+
+  <!-- WEIGHT TOOL -->
+  <div id="tool-weight">
+
+    <div class="card">
+      <span class="badge">Step 1</span>
+      <h2>Ideal Body Weight (IBW)</h2>
+      <p class="sub">Devine formula. Adults only.</p>
+
+      <div class="field">
+        <label>Sex</label>
+        <div class="segmented" id="sexToggle">
+          <button type="button" data-sex="male" class="active">Male</button>
+          <button type="button" data-sex="female">Female</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="height">Height (cm)</label>
+        <input type="number" id="height" placeholder="e.g. 172" step="any">
+      </div>
+
+      <div class="result">
+        <div class="value" id="ibwResult">IBW = — kg</div>
+        <div class="formula" id="ibwFormula">Enter height to calculate.</div>
+      </div>
+
+      <p class="note">Male: IBW = 50 + [0.91 × (Height − 152.4)] &nbsp;|&nbsp; Female: IBW = 45.5 + [0.91 × (Height − 152.4)]</p>
+    </div>
+
+    <div class="card">
+      <span class="badge">Step 2</span>
+      <h2>Adjusted Body Weight (AdjBW)</h2>
+      <p class="sub">Use when Actual Body Weight (ABW) is ≥ 20% above IBW, or BMI ≥ 30.</p>
+
+      <div class="field">
+        <label for="ibwInput">IBW (kg)</label>
+        <input type="number" id="ibwInput" placeholder="auto-filled from Step 1, or enter directly" step="any">
+      </div>
+
+      <div class="field">
+        <label for="abwInput">Actual Body Weight, ABW (kg)</label>
+        <input type="number" id="abwInput" placeholder="e.g. 130" step="any">
+      </div>
+
+      <div class="result">
+        <div class="value" id="adjResult">AdjBW = — kg</div>
+        <div class="formula" id="adjFormula">Enter IBW and ABW to calculate.</div>
+      </div>
+
+      <p class="note">AdjBW = IBW + [0.4 × (ABW − IBW)]</p>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:1rem;">Dosing weight reference (adults)</h2>
+      <p class="sub">Which weight to use for each drug — from the worksheet's reference table.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--line);text-align:left;">
+            <th style="padding:6px 8px 6px 0;">Drug</th>
+            <th style="padding:6px 8px;">Normal patients</th>
+            <th style="padding:6px 8px;">Obesity</th>
+            <th style="padding:6px 0 6px 8px;">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="doseWeightTable" style="color:var(--ink-muted);"></tbody>
+      </table>
+      <p class="note">Rule of thumb: if ABW &lt; IBW, use ABW as the dosing weight. Obese = BMI ≥ 30 or ABW ≥ 20% above IBW.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>Internal reference tool — verify calculations against the original worksheet before clinical use.</footer>
+
+<script>
+  // ---- Weight tool logic ----
+  let sex = 'male';
+
+  const sexToggle = document.getElementById('sexToggle');
+  sexToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    sex = btn.dataset.sex;
+    [...sexToggle.children].forEach(b => b.classList.toggle('active', b === btn));
+    calcIBW();
+  });
+
+  const heightInput = document.getElementById('height');
+  const ibwResult = document.getElementById('ibwResult');
+  const ibwFormula = document.getElementById('ibwFormula');
+  const ibwInput = document.getElementById('ibwInput');
+
+  function calcIBW(){
+    const h = parseFloat(heightInput.value);
+    if(isNaN(h) || h <= 0){
+      ibwResult.textContent = 'IBW = — kg';
+      ibwFormula.textContent = 'Enter height to calculate.';
+      return;
+    }
+    const base = sex === 'male' ? 50 : 45.5;
+    const ibw = base + 0.91 * (h - 152.4);
+    ibwResult.textContent = `IBW = ${ibw.toFixed(2)} kg`;
+    ibwFormula.textContent = `${base} + [0.91 × (${h} − 152.4)] = ${ibw.toFixed(2)} kg`;
+    // convenience: push into step 2 if empty or previously auto-filled
+    if(ibwInput.value === '' || ibwInput.dataset.auto === 'true'){
+      ibwInput.value = ibw.toFixed(2);
+      ibwInput.dataset.auto = 'true';
+      calcAdj();
+    }
+  }
+  heightInput.addEventListener('input', calcIBW);
+
+  const abwInput = document.getElementById('abwInput');
+  const adjResult = document.getElementById('adjResult');
+  const adjFormula = document.getElementById('adjFormula');
+
+  function calcAdj(){
+    const ibw = parseFloat(ibwInput.value);
+    const abw = parseFloat(abwInput.value);
+    if(isNaN(ibw) || isNaN(abw)){
+      adjResult.textContent = 'AdjBW = — kg';
+      adjFormula.textContent = 'Enter IBW and ABW to calculate.';
+      return;
+    }
+    const adj = ibw + 0.4 * (abw - ibw);
+    adjResult.textContent = `AdjBW = ${adj.toFixed(2)} kg`;
+    adjFormula.textContent = `${ibw} + [0.4 × (${abw} − ${ibw})] = ${adj.toFixed(2)} kg`;
+  }
+  ibwInput.addEventListener('input', () => { ibwInput.dataset.auto = 'false'; calcAdj(); });
+  abwInput.addEventListener('input', calcAdj);
+
+  // ---- Reference table ----
+  const doseWeightData = [
+    ['Amikacin / Gentamicin', 'ABW', 'AdjBW', 'ABW:IBW is > 1.2'],
+    ['Vancomycin', 'ABW', 'ABW', ''],
+    ['Phenytoin', 'IBW', 'IBW + 1.33(ABW−IBW) load; IBW + 0.4(ABW−IBW) maint.', ''],
+    ['Valproic acid', 'ABW', 'IBW', 'Clearance correlates better with IBW in obesity'],
+    ['Carbamazepine', 'ABW', 'ABW', 'Distributes into all tissues'],
+    ['Phenobarbitone', 'No information', '—', ''],
+    ['Digoxin', 'IBW', 'IBW', ''],
+    ['Theophylline', 'IBW', 'IBW', 'Distributes poorly into body fat'],
+    ['Lithium', 'No information', '—', '']
+  ];
+  const tbody = document.getElementById('doseWeightTable');
+  doseWeightData.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--line)';
+    row.forEach((cell, i) => {
+      const td = document.createElement('td');
+      td.textContent = cell;
+      td.style.padding = i === 0 ? '6px 8px 6px 0' : (i===3 ? '6px 0 6px 8px' : '6px 8px');
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // ---- Tool selector (placeholder for future modules) ----
+  document.getElementById('toolSelect').addEventListener('change', (e) => {
+    // Only "weight" is enabled for now; more will be added as sections + cases here.
+  });
+</script>
+
+</body>
+</html>
