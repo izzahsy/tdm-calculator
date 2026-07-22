@@ -100,10 +100,6 @@
     color:var(--ink);
     margin-bottom:5px;
   }
-  .field .row{
-    display:flex;
-    gap:10px;
-  }
   input[type="number"]{
     width:100%;
     padding:9px 11px;
@@ -136,12 +132,27 @@
     background:var(--teal);
     color:#fff;
   }
+  .results-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-top:18px;
+  }
+  @media (max-width:560px){
+    .results-grid{grid-template-columns:1fr;}
+  }
   .result{
-    margin-top:16px;
     padding:14px 16px;
     background:var(--mono-bg);
     border-left:3px solid var(--teal);
     border-radius:0 6px 6px 0;
+  }
+  .result .label{
+    font-size:0.75rem;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-muted);
+    margin-bottom:4px;
   }
   .result .value{
     font-family:"Courier New",monospace;
@@ -151,7 +162,7 @@
   }
   .result .formula{
     font-family:"Courier New",monospace;
-    font-size:0.82rem;
+    font-size:0.8rem;
     color:var(--ink-muted);
     margin-top:6px;
   }
@@ -159,11 +170,6 @@
     font-size:0.8rem;
     color:var(--ink-muted);
     margin-top:10px;
-  }
-  .divider{
-    border:none;
-    border-top:1px solid var(--line);
-    margin:22px 0;
   }
   footer{
     text-align:center;
@@ -209,9 +215,9 @@
   <div id="tool-weight">
 
     <div class="card">
-      <span class="badge">Step 1</span>
-      <h2>Ideal Body Weight (IBW)</h2>
-      <p class="sub">Devine formula. Adults only.</p>
+      <span class="badge">Weight calculator</span>
+      <h2>Ideal &amp; Adjusted Body Weight</h2>
+      <p class="sub">Enter height and actual body weight — both results update immediately. Adults only.</p>
 
       <div class="field">
         <label>Sex</label>
@@ -226,35 +232,28 @@
         <input type="number" id="height" placeholder="e.g. 172" step="any">
       </div>
 
-      <div class="result">
-        <div class="value" id="ibwResult">IBW = — kg</div>
-        <div class="formula" id="ibwFormula">Enter height to calculate.</div>
-      </div>
-
-      <p class="note">Male: IBW = 50 + [0.91 × (Height − 152.4)] &nbsp;|&nbsp; Female: IBW = 45.5 + [0.91 × (Height − 152.4)]</p>
-    </div>
-
-    <div class="card">
-      <span class="badge">Step 2</span>
-      <h2>Adjusted Body Weight (AdjBW)</h2>
-      <p class="sub">Use when Actual Body Weight (ABW) is ≥ 20% above IBW, or BMI ≥ 30.</p>
-
-      <div class="field">
-        <label for="ibwInput">IBW (kg)</label>
-        <input type="number" id="ibwInput" placeholder="auto-filled from Step 1, or enter directly" step="any">
-      </div>
-
       <div class="field">
         <label for="abwInput">Actual Body Weight, ABW (kg)</label>
         <input type="number" id="abwInput" placeholder="e.g. 130" step="any">
       </div>
 
-      <div class="result">
-        <div class="value" id="adjResult">AdjBW = — kg</div>
-        <div class="formula" id="adjFormula">Enter IBW and ABW to calculate.</div>
+      <div class="results-grid">
+        <div class="result">
+          <div class="label">Ideal Body Weight</div>
+          <div class="value" id="ibwResult">— kg</div>
+          <div class="formula" id="ibwFormula">Enter height.</div>
+        </div>
+        <div class="result">
+          <div class="label">Adjusted Body Weight</div>
+          <div class="value" id="adjResult">— kg</div>
+          <div class="formula" id="adjFormula">Enter height and ABW.</div>
+        </div>
       </div>
 
-      <p class="note">AdjBW = IBW + [0.4 × (ABW − IBW)]</p>
+      <p class="note">
+        IBW (male) = 50 + [0.91 × (Height − 152.4)] &nbsp;|&nbsp; IBW (female) = 45.5 + [0.91 × (Height − 152.4)]<br>
+        AdjBW = IBW + [0.4 × (ABW − IBW)] — use when ABW is ≥ 20% above IBW, or BMI ≥ 30
+      </p>
     </div>
 
     <div class="card">
@@ -283,6 +282,7 @@
 <script>
   // ---- Weight tool logic ----
   let sex = 'male';
+  let currentIBW = null;
 
   const sexToggle = document.getElementById('sexToggle');
   sexToggle.addEventListener('click', (e) => {
@@ -290,52 +290,45 @@
     if(!btn) return;
     sex = btn.dataset.sex;
     [...sexToggle.children].forEach(b => b.classList.toggle('active', b === btn));
-    calcIBW();
+    calcAll();
   });
 
   const heightInput = document.getElementById('height');
+  const abwInput = document.getElementById('abwInput');
   const ibwResult = document.getElementById('ibwResult');
   const ibwFormula = document.getElementById('ibwFormula');
-  const ibwInput = document.getElementById('ibwInput');
-
-  function calcIBW(){
-    const h = parseFloat(heightInput.value);
-    if(isNaN(h) || h <= 0){
-      ibwResult.textContent = 'IBW = — kg';
-      ibwFormula.textContent = 'Enter height to calculate.';
-      return;
-    }
-    const base = sex === 'male' ? 50 : 45.5;
-    const ibw = base + 0.91 * (h - 152.4);
-    ibwResult.textContent = `IBW = ${ibw.toFixed(2)} kg`;
-    ibwFormula.textContent = `${base} + [0.91 × (${h} − 152.4)] = ${ibw.toFixed(2)} kg`;
-    // convenience: push into step 2 if empty or previously auto-filled
-    if(ibwInput.value === '' || ibwInput.dataset.auto === 'true'){
-      ibwInput.value = ibw.toFixed(2);
-      ibwInput.dataset.auto = 'true';
-      calcAdj();
-    }
-  }
-  heightInput.addEventListener('input', calcIBW);
-
-  const abwInput = document.getElementById('abwInput');
   const adjResult = document.getElementById('adjResult');
   const adjFormula = document.getElementById('adjFormula');
 
-  function calcAdj(){
-    const ibw = parseFloat(ibwInput.value);
+  function calcAll(){
+    const h = parseFloat(heightInput.value);
     const abw = parseFloat(abwInput.value);
-    if(isNaN(ibw) || isNaN(abw)){
-      adjResult.textContent = 'AdjBW = — kg';
-      adjFormula.textContent = 'Enter IBW and ABW to calculate.';
-      return;
+
+    // IBW
+    if(isNaN(h) || h <= 0){
+      currentIBW = null;
+      ibwResult.textContent = '— kg';
+      ibwFormula.textContent = 'Enter height.';
+    } else {
+      const base = sex === 'male' ? 50 : 45.5;
+      currentIBW = base + 0.91 * (h - 152.4);
+      ibwResult.textContent = `${currentIBW.toFixed(2)} kg`;
+      ibwFormula.textContent = `${base} + [0.91 × (${h} − 152.4)] = ${currentIBW.toFixed(2)} kg`;
     }
-    const adj = ibw + 0.4 * (abw - ibw);
-    adjResult.textContent = `AdjBW = ${adj.toFixed(2)} kg`;
-    adjFormula.textContent = `${ibw} + [0.4 × (${abw} − ${ibw})] = ${adj.toFixed(2)} kg`;
+
+    // AdjBW (depends on IBW + ABW)
+    if(currentIBW === null || isNaN(abw)){
+      adjResult.textContent = '— kg';
+      adjFormula.textContent = 'Enter height and ABW.';
+    } else {
+      const adj = currentIBW + 0.4 * (abw - currentIBW);
+      adjResult.textContent = `${adj.toFixed(2)} kg`;
+      adjFormula.textContent = `${currentIBW.toFixed(2)} + [0.4 × (${abw} − ${currentIBW.toFixed(2)})] = ${adj.toFixed(2)} kg`;
+    }
   }
-  ibwInput.addEventListener('input', () => { ibwInput.dataset.auto = 'false'; calcAdj(); });
-  abwInput.addEventListener('input', calcAdj);
+
+  heightInput.addEventListener('input', calcAll);
+  abwInput.addEventListener('input', calcAll);
 
   // ---- Reference table ----
   const doseWeightData = [
